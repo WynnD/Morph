@@ -5,13 +5,32 @@
 
 using namespace std;
 
-int getNumWords(FILE* theFile) {
-    int count;
+
+void printTopLengths(int lengths[50]) {
+
+    printf("Word lengths where there are more than 2000 words:\n");
+    printf("Length  How Many\n");
+    for (int i = 0; i < 50; ++i) {
+        if (lengths[i] > 2000) {
+            printf("%d  %d\n", i, lengths[i]);
+        }
+    }
+
+    return;
+}
+
+int getNumWords(FILE* theFile, int lengths[50]) {
+    int charCount = 0;
+    int wordCount = 0;
     int c;
     while(!feof(theFile)) {
         c = fgetc(theFile);
         if (c == '\n') {
-            count++;
+            wordCount++;
+            lengths[charCount]++;
+            charCount = 0;
+        } else {
+            charCount++;
         }
 
     }
@@ -19,25 +38,33 @@ int getNumWords(FILE* theFile) {
     rewind(theFile);
 
 
-    return count;
+    return wordCount;
 }
 
 char** readWords(FILE* theFile, int numWords) {
 
     char** theList = NULL;
+    int i = 0;
     theList = (char**) malloc(sizeof(char*)*numWords);
-    char* currentWord = NULL;
-    int wordCount = 0;
-
-    do {
-        wordCount++;
-        currentWord = (char*) malloc(sizeof(char) * strlen(currentWord)+1);
-
-        fscanf(theFile, " %s", &currentWord);
-
-    } while (!feof(theFile));
+    char* toAdd = NULL;
+    char currentWord[50];
 
 
+
+    while (!feof(theFile)) {
+        fgets(currentWord, sizeof(currentWord), theFile);
+        toAdd = (char*) malloc(sizeof(char) * strlen(currentWord)+1);
+        strcpy(toAdd,currentWord);
+
+
+        theList[i] = toAdd;
+        //printf("Current word: %s\n", theList[i]);
+
+        i++;
+    }
+    for (int i = 0; i < 1000; ++i) {
+        printf("Current word: %s\n", theList[i]);
+    }
 
 }
 
@@ -46,21 +73,21 @@ int main()
 {
     FILE *theFile = fopen("dictionary.txt", "r");
 
+    int lenCounts[50] = {0};
+
     char* currentWord;
     char* newWord;
 
     /* theList holds memory address of first char in first word,
-     * *theList is pointer to pointer of first char in first word in array,
-     * while **theList is pointer to first char in
-     *
-     */
+   * *theList is pointer to pointer of first char in first word in array,
+   * while **theList is pointer to first char in
+   *
+   */
 
 
 
 
     char** theList;
-    int wordLen;
-
     int numWords;
 
 
@@ -71,18 +98,20 @@ int main()
         exit(-1);
     }
 
-    numWords = getNumWords(theFile);
+    numWords = getNumWords(theFile, lenCounts);
     theList = readWords(theFile, numWords);
 
-/*
-    while (currentWord != EOF) {
+    printTopLengths(lenCounts);
 
-        newWord = NULL;
-        newWord = (char*) malloc(sizeof(char)*(wordLen+1));
-        *theList = newWord;
+    /*
+  while (currentWord != EOF) {
 
-        currentWord = fgets(" %s", theFile);
-    }
+      newWord = NULL;
+      newWord = (char*) malloc(sizeof(char)*(wordLen+1));
+      *theList = newWord;
+
+      currentWord = fgets(" %s", theFile);
+  }
 
 
 */
@@ -90,6 +119,12 @@ int main()
 
     return 0;
 }
+
+
+
+
+
+
 
 
 
