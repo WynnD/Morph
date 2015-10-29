@@ -41,31 +41,45 @@ int getNumWords(FILE* theFile, int lengths[50]) {
     return wordCount;
 }
 
-char** readWords(FILE* theFile, int numWords) {
+char** readWords(FILE* theFile, int lenCounts[50], int lengthChosen) {
+
+    int wordsOfChosenLen = lenCounts[lengthChosen];
+
+    printf("Number of words of length %d: %d\n", lengthChosen, wordsOfChosenLen);
 
     char** theList = NULL;
     int i = 0;
-    theList = (char**) malloc(sizeof(char*)*numWords);
+    theList = (char**) malloc(sizeof(char*)*wordsOfChosenLen);
     char* toAdd = NULL;
     char currentWord[50];
 
 
 
-    while (!feof(theFile)) {
-        fgets(currentWord, sizeof(currentWord), theFile);
-        toAdd = (char*) malloc(sizeof(char) * strlen(currentWord)+1);
-        strcpy(toAdd,currentWord);
+    while (!feof(theFile) && i < wordsOfChosenLen) {
+        fgets(currentWord, wordsOfChosenLen, theFile);
+
+        if (strlen(currentWord) == lengthChosen +1) {
+            toAdd = (char*) malloc(sizeof(char) * (lengthChosen+1));
+            strcpy(toAdd,currentWord);
 
 
-        theList[i] = toAdd;
-        //printf("Current word: %s\n", theList[i]);
-
-        i++;
-    }
-    for (int i = 0; i < 1000; ++i) {
-        printf("Current word: %s\n", theList[i]);
+            theList[i] = toAdd;
+            i++;
+        }
     }
 
+    printf("%d. Current word: %s\n", i, theList[i-1]);
+
+    return theList;
+}
+
+int promptUserForLen() {
+    int length;
+
+    printf("What length words do you want to use? ");
+    scanf(" %d", &length);
+
+    return length;
 }
 
 
@@ -74,18 +88,7 @@ int main()
     FILE *theFile = fopen("dictionary.txt", "r");
 
     int lenCounts[50] = {0};
-
-    char* currentWord;
-    char* newWord;
-
-    /* theList holds memory address of first char in first word,
-   * *theList is pointer to pointer of first char in first word in array,
-   * while **theList is pointer to first char in
-   *
-   */
-
-
-
+    int lengthChosen;
 
     char** theList;
     int numWords;
@@ -99,7 +102,10 @@ int main()
     }
 
     numWords = getNumWords(theFile, lenCounts);
-    theList = readWords(theFile, numWords);
+
+    lengthChosen = promptUserForLen();
+
+    theList = readWords(theFile, lenCounts, lengthChosen);
 
     printTopLengths(lenCounts);
 
