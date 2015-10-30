@@ -58,17 +58,28 @@ char** readWords(FILE* theFile, int lenCounts[50], int lengthChosen) {
     while (!feof(theFile) && i < wordsOfChosenLen) {
         fgets(currentWord, wordsOfChosenLen, theFile);
 
-        if (strlen(currentWord) == lengthChosen +1) {
+        if (strlen(currentWord) == lengthChosen + 1) {
             toAdd = (char*) malloc(sizeof(char) * (lengthChosen+1));
+
+            for (int j = 0; j < lengthChosen; ++j) { // convert word to be copied into lowercase
+                currentWord[j] = tolower(currentWord[j]);
+            }
+
             strcpy(toAdd,currentWord);
 
 
+
             theList[i] = toAdd;
+            if (theList[i][0] < 97) { // check if copied word is uppercase
+                printf("\nUpper case word found!\n#%d Word: %s\n\n", i+1, theList[i]);
+            }
             i++;
         }
     }
 
-    printf("%d. Current word: %s\n", i, theList[i-1]);
+    printf("Number of words read was %d\n\n", wordsOfChosenLen);
+
+    //printf("#%d. Last word in array: %s\n", i, theList[i-1]);
 
     return theList;
 }
@@ -83,6 +94,60 @@ int promptUserForLen() {
 }
 
 
+void declareWords(char* start, char* end, int length) {
+    start = (char*) malloc(sizeof(char) * (length+1));
+    end = (char*) malloc(sizeof(char) * (length+1));
+
+    return;
+}
+
+void getStartAndEnd(char** theList, char* start, char* end) {
+
+    int length = strlen(start);
+    bool go = false;
+    char a[length];
+    char b[length];
+
+    while (!go) {
+        printf("Enter starting and ending words, or 'r' for either for a random word: ");
+
+
+        scanf(" %s", &a);
+
+        if (strcmp(a, "exit") == 0) { // if a is "exit", quit game
+            break;
+        }
+
+        // if a is 'r', find a random number using getRandom(char** theList, int length)
+        if (strlen(a) == 1 && a[0] == "r") {
+            strcpy(start,
+                   getRandom(theList, length));
+
+        // else if a is not of correct length, continue
+        } else if (strlen(a) != length) {
+            printf("'%s' is not of length %d. Please retry.\n\n", b, length);
+            continue;
+        }
+
+
+        scanf(" %s", &b); // get second word
+
+        // if b is 'r', find a random number using getRandom(char** theList, int length)
+        if (strlen(b) == 1 && b[0] == "r") {
+            strcpy(end, getRandom(theList, length));
+
+        // else if b is not of correct length, continue
+        } else if (strlen(b) != length) {
+            printf("'%s' is not of length %d. Please retry.\n\n", b, length);
+            continue;
+        }
+
+
+    }
+
+}
+
+
 int main()
 {
     FILE *theFile = fopen("dictionary.txt", "r");
@@ -91,8 +156,12 @@ int main()
     int lengthChosen;
 
     char** theList;
+    char* start;
+    char* end;
+
     int numWords;
 
+    srand(time(1));
 
 
 
@@ -101,26 +170,19 @@ int main()
         exit(-1);
     }
 
+    printTopLengths(lenCounts);
+
     numWords = getNumWords(theFile, lenCounts);
 
     lengthChosen = promptUserForLen();
 
     theList = readWords(theFile, lenCounts, lengthChosen);
 
-    printTopLengths(lenCounts);
+    declareWords(start, end, lengthChosen);
 
-    /*
-  while (currentWord != EOF) {
-
-      newWord = NULL;
-      newWord = (char*) malloc(sizeof(char)*(wordLen+1));
-      *theList = newWord;
-
-      currentWord = fgets(" %s", theFile);
-  }
+    getStartAndEnd(theList, start, end);
 
 
-*/
     fclose(theFile);
 
     return 0;
