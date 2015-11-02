@@ -8,8 +8,10 @@ using namespace std;
 
 
 typedef struct Node {
-    char* word;
-    int parentIndex;
+    Node * next = NULL;
+    Node * prev = NULL;
+    int wordIndex = -1;
+    Node * head = this;
 } Node_struct;
 
 
@@ -272,22 +274,21 @@ void theGame(char** theList, char* start, char* end, int numWords) {
 
     return;
 }
-/*
-Node* addNode(Node** parent, int wordIndex) {
+
+Node* addNode(Node* parent, int wordIndex) {
     Node * next = (Node*) malloc(sizeof(Node));
 
-    if (parent->head != NULL) {
-        next->head = parent->head;
+    if ((parent)->head != NULL) {
+        next->head = (parent)->head;
     }
 
-    parent->next = next;
+    (parent)->next = next;
     next->prev = parent;
     next->wordIndex = wordIndex;
     next->next = NULL;
 
     return next;
 }
-*/
 
 bool isInTree(Node* tree, int index) {
     printf("Guessing... %d\n", index);
@@ -300,32 +301,76 @@ bool isInTree(Node* tree, int index) {
     }
     return false;
 }
+/*
+int* findSolution(Node nodeList[], char** theList, char* end, int numWords,
+                  int startIndex, int goalIndex, bool wordsGuessed[]) {
 
-int* findSolution(Node nodeList[], char** theList, char* end, int numWords, int goalIndex) {
-    int currentWord = 0;
-    int nodeIndex = 0;
-    int dictIndex = 0;
+    int addIndex = 1; // index of current node to add word
+
+    int currentWord = startIndex; // index of current word being expanded
+
+
+    int dictIndex = 0; // index of dictionary word currently being compared to currentWord
+
     bool done = false;
 
-    while (dictIndex != goalIndex) {
+    while (currentWord != goalIndex && addIndex < numWords) {
 
+        for (int i = 0; i < numWords; ++i) {
+            if (isOneCharDifferent(theList[i], theList[currentWord]) && !wordsGuessed[i]) {
 
+                nodeList[addIndex].parentIndex = currentWord;
+                strcpy(nodeList[addIndex].word,theList[i]);
+                wordsGuessed[i] = true;
+                addIndex++;
+            }
+        }
+
+        currentWord++;
     }
+
+    return addIndex-1;
 }
 
-/*void findSolution(Node** currentNode, char** theList, char* end, int numWords, int guessCounts[], int goalIndex) {
+void getSolution(Node nodeList[], int numWords, char* start, char* end, int lastNode) {
+
+    Node* currentNode = nodeList[lastNode];
+
+    printf("Reverse order");
+    while (parentIndex != -1) {
+        printf("");
+    }
 
 
-    if ((*currentNode)->wordIndex == goalIndex) {
-        printf("Goal index: %d, currentNode index: %d\n",goalIndex,(*currentNode)->wordIndex);
+
+    printf("Forwards order");
+}
+*/
+void findSolution(Node ** wordTree, Node* currentNode, char** theList, int numWords, bool guessCounts[], int goalIndex) {
+
+
+    if ((currentNode)->wordIndex == goalIndex) {
+        *wordTree = currentNode;
         return;
     } else {
         for (int i = 0; i < numWords; ++i) {
-            if (isOneCharDifferent(theList[(*currentNode)->wordIndex],theList[i])
-                    && guessCounts[i] == 0) {
-                guessCounts[i]++;
+            if (isOneCharDifferent(theList[(currentNode)->wordIndex],theList[i])
+                    && guessCounts[i] == false) {
 
-                findSolution(&addNode(currentNode,i), theList, end, numWords, guessCounts, goalIndex);
+                if (isOneCharDifferent(theList[currentNode->wordIndex],
+                                       theList[goalIndex])) {
+                    // checks if we are one char away from the correct answer, and if so, jumps to answer
+                    i = goalIndex;
+                }
+
+                Node * newNode = addNode(currentNode, i);
+                guessCounts[i] = true;
+
+                findSolution(wordTree, newNode, theList,
+                             numWords, guessCounts, goalIndex);
+                if (i == goalIndex) {
+                    break;
+                }
             }
         }
     }
@@ -341,17 +386,28 @@ int findWordIndex(char** theList, char* word, int numWords) {
     return 0;
 }
 
-void readTree(Node* top, char** theList) {
-    for (Node* ptr = top; ptr->next != NULL; ptr = ptr->next) {
+void readTree(Node* endNode, char** theList) {
+    printf("In reverse ...\n");
+
+    for (Node* ptr = endNode; ptr->prev != NULL; ptr = ptr->prev) {
         printf("#%d. %s\n", ptr->wordIndex, theList[ptr->wordIndex]);
     }
 }
-*/
+
+void readBackwards(Node* top, char** theList) {
+
+    if (top->prev == NULL) {
+        return;
+    } else {
+        readBackwards(top->prev, theList);
+        printf("#%d. %s\n", top->wordIndex, theList[top->wordIndex]);
+    }
+}
 
 int main()
 {
     FILE *theFile = fopen("dictionary.txt", "r");
-
+    Node * wordTree = new Node;
 
     int lenCounts[50] = {0};
     int lengthChosen;
@@ -392,24 +448,23 @@ int main()
 
     //Start node search
 
-    Node* wordTree = (Node*) malloc(sizeof(Node)*numWords);
-    for (int i = 0; i < numWords; ++i) {
-        wordTree[i].word = (char*) malloc( sizeof( char) * (lengthChosen+1));
-        wordTree[i].parentIndex = 0;
-    }
-    strcpy(wordTree[0].word, start);
-
+    bool wasGuessed[numWords] = {false};
+    int startIndex = findWordIndex(theList, start, numWords);
     int goalIndex = findWordIndex(theList, end, numWords);
+
+    wordTree->wordIndex = startIndex;
+
     printf("Word to search for:\nWord index: %d ... word: %s\n", findWordIndex(theList, end, numWords), theList[findWordIndex(theList, end, numWords)]);
 
-    findSolution(wordTree, theList, end, numWords, goalIndex);
+    findSolution(&wordTree, wordTree, theList, numWords, wasGuessed, goalIndex);
 
-    getSolution(wordTree, numWords);
 
 
 //    theGame(theList, start, end, numWords);
-    if (wordTree != NULL) {
+    if (wordTree->prev != NULL) {
         readTree(wordTree, theList);
+        printf("Now forwards!\n");
+        readBackwards(wordTree, theList);
     } else {
         printf("No winning path found!\n");
     }
